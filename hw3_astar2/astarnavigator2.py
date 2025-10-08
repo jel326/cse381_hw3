@@ -18,7 +18,7 @@
 
 import sys, pygame, math, numpy, random, time, copy
 from pygame.locals import * 
-
+from utils import distance
 from constants import *
 from utils import *
 from core import *
@@ -126,16 +126,17 @@ def clearShot(p1, p2, worldLines, worldPoints, agent):
     ### YOUR CODE GOES BELOW HERE ###
 
 	#check the lines in the world to see if there is anythign that is blocking the path
-	for line in worldLines:
-     	start = line[0]
-		end = line[1]
+    for line in worldLines:
+        start = line[0]
+        end = line[1]
 
 		#no intersection is found which means path is good ot go
-		if not linesIntersect(p1, p2, start, end):
-			return True
+        if linesIntersect(p1, p2, start, end):
+            return False
   
     ### YOUR CODE GOES ABOVE HERE ###
-	return False
+    return True
+
 
 ### Given a location, find the closest pathnode that the agent can get to without collision
 ### agent: the agent
@@ -146,6 +147,24 @@ def getOnPathNetwork(location, pathnodes, worldLines, agent):
 	node = None
 	### YOUR CODE GOES BELOW HERE ###
 
+	closestDistance = 1000000 		#large number as a place holder
+	closestNode = None
+	
+	for i in range(len(pathnodes)):		#linear search through every path 
+		current = pathnodes[i]
+  
+		#Calculate using distance forumla 
+		dx = current[0] - location[0]
+		dy = current[1] - location[1]
+		dist = math.sqrt(dx*dx + dy*dy)
+
+		#check and se if there is a node closer that has a clear shot 
+		if dist < closestDistance:
+			if clearShot(location, current, worldLines, [], agent):
+				closestDistance = dist
+				closestNode = current
+	node = closestNode
+ 
 	### YOUR CODE GOES ABOVE HERE ###
 	return node
 
@@ -170,17 +189,22 @@ def astar(init, goal, network):
 		for n, cost in fList:
 			if n == node:
 				return cost
+		return 1000000
 
 	#Helper function to get parent (similar to other get helper functions)
 	def getParent(node, pList):
 		for n, parent in pList:
 			if n == node:
 				return parent
+		return None
+
 
 	def getGCost(node, gList):
 		for n, cost in gList:
 			if n == node:
 				return cost
+		return 1000000
+
 
 	#udpate the parent for a node in the parent list with a parent node called 'parentNode'
 	def updateParent(node, parentNode, pList):
@@ -270,6 +294,20 @@ def astar(init, goal, network):
 def myUpdate(nav, delta):
 	### YOUR CODE GOES BELOW HERE ###
 	
+	#Check if the current path segmaent is clear or not
+	if nav.agent.moveTarget is not None:
+		currentPosition = nav.agent.getPosition()
+		nextTarget = nav.agent.moveTarget
+
+		#check if the path segment if clear to go 
+		worldLines = nav.world.getLinesWithoutBorders()
+		path = clearShot(currentPosition, nextTarget, worldLines, [], nav.agent)
+
+		if not path:
+			#redo the path from teh current position to destination
+			destination = nav.agent.getDestination()
+			nav.computePath(currentPosition, destination)
+ 
 	### YOUR CODE GOES ABOVE HERE ###
 	return None
 
@@ -279,6 +317,19 @@ def myUpdate(nav, delta):
 def myCheckpoint(nav):
 	### YOUR CODE GOES BELOW HERE ###
 	
+	#once reached a node, check if can continue
+	if nav.path and len(nav.path) > 0:
+		currentPosition = nav.agent.getPosition()
+		nextTarget = nav.path[0]
+  
+		worldLines = nav.world.getLinesWithoutBorders()
+		path = clearShot(currentPosition, nextTarget, worldLines, [], nav.agent)
+  
+		if not path:
+			#find a new path 
+			destination = nav.agent.getDestination()
+			nav.computePath(currentPosition, destination)
+ 
 	### YOUR CODE GOES ABOVE HERE ###
 	return None
 
