@@ -134,7 +134,103 @@ def astar(init, goal, network):
 	open = []
 	closed = []
 	### YOUR CODE GOES BELOW HERE ###
+ 
+	#Helper function to get fCost
+	def getFCost(node, fList):
+		for n, cost in fList:
+			if n == node:
+				return cost
+
+	#Helper function to get parent (similar to other get helper functions)
+	def getParent(node, pList):
+		for n, parent in pList:
+			if n == node:
+				return parent
+
+	def getGCost(node, gList):
+		for n, cost in gList:
+			if n == node:
+				return cost
+
+	#udpate the parent for a node in the parent list with a parent node called 'parentNode'
+	def updateParent(node, parentNode, pList):
+		for i in range(len(pList)):
+			if pList[i][0] == node:
+				pList[i] = (node, parentNode)
+				return
+		pList.append((node, parentNode))
+  
+	#update the gCost for a node inside the gList with a new cost named 'cost'
+	def updateGCost(node, cost, gList):
+		for i in range(len(gList)):
+			if gList[i][0] == node:
+				gList[i] = (node, cost)
+				return
+		gList.append((node, cost))
+  
+	#update the fCost for a node inside the fList with a new cost named 'cost'
+	def updateFCost(node, cost, fList):
+		for i in range(len(fList)):
+			if fList[i][0] == node:
+				fList[i] = (node, cost)
+				return
+		fList.append((node, cost))
 	
+	#initalize variables to track the costs 
+	goalCost = []
+	fCost = []
+	parent = []
+	
+	open.append(init)
+	while len(open) > 0:			#start with the lowest distance cost in list
+		current = open[0]
+		lowestF = getFCost(current, fCost)
+		for node in open:
+			fValue = getFCost(node, fCost)
+			if fValue < lowestF:
+				current = node		#find the lowest F Cost using linear search 
+				lowestF = fValue
+		if current == goal:
+			#follow parent
+			pathNode = current
+			while pathNode != None:
+				path.append(pathNode)
+				pathNode = getParent(pathNode, parent)
+			path.reverse()
+			break
+
+		#after reconstructing path, move the current from open to closed
+		open.remove(current)
+		closed.append(current)
+  
+		#Get your neighbors
+		neighbors = []
+		for edge in network:
+			if edge[0] == current:
+				neighbors.append(edge[1])	#append neighbor
+			elif edge[1] == current:
+				neighbors.append(edge[0])
+		#Now check teh neighbors if its closed or not
+		for neighbor in neighbors:
+			if neighbor in closed:
+				continue
+			
+			g = getGCost(current, goalCost)
+			tentativeG = g + distance(current, neighbor)		#find a tentative g cost to its neighbor
+			neighborG = getGCost(neighbor, goalCost)
+			openNeighbor = neighbor in open
+
+			if not openNeighbor or tentativeG < neighborG:
+				#now we have to update the parent 
+				updateParent(neighbor, current, parent)
+				updateGCost(neighbor, tentativeG, goalCost)
+				updateFCost(neighbor, tentativeG + distance(neighbor, goal), fCost)
+    
+				if not openNeighbor:
+					open.append(neighbor)
+		
+	
+ 
 	### YOUR CODE GOES ABOVE HERE ###
 	return path, closed
 
