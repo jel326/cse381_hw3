@@ -94,6 +94,27 @@ def unobstructedNetwork(network, worldLines, world):
 			newnetwork.append(l)
 	return newnetwork
 
+#checking if two lines from x1 to x2 and y1 to y2 
+def linesIntersect(x1, x2, y1, y2):
+	#calcuating distance
+	dx1 = x2[0] - x1[0] 
+	dy1 = x2[1] - x1[1]
+	dx2 = y2[0] - y1[0]
+	dy2 = y2[1] - y1[1]
+
+	#getting determinant
+	det = dx1 * dy2 - dy1 * dx2
+	if det == 0:
+		return False 		#lines are parallel
+	dx3 = x1[0] - y1[0]
+	dy3 = x1[1] - y1[1]
+	t1 = (dx2 * dy3 - dy2 * dx3) / det
+	t2 = (dx1 * dy3 - dy1 * dx3) / det
+ 
+	#now check if the intersection point is within both line segments
+	if t1 >= 0 and t1 <= 1 and t2 >= 0 and t2 <= 1:
+		return True
+	return False
 
 
 ### Returns true if the agent can get from p1 to p2 directly without running into an obstacle.
@@ -104,8 +125,17 @@ def unobstructedNetwork(network, worldLines, world):
 def clearShot(p1, p2, worldLines, worldPoints, agent):
     ### YOUR CODE GOES BELOW HERE ###
 
+	#check the lines in the world to see if there is anythign that is blocking the path
+	for line in worldLines:
+     	start = line[0]
+		end = line[1]
+
+		#no intersection is found which means path is good ot go
+		if not linesIntersect(p1, p2, start, end):
+			return True
+  
     ### YOUR CODE GOES ABOVE HERE ###
-    return False
+	return False
 
 ### Given a location, find the closest pathnode that the agent can get to without collision
 ### agent: the agent
