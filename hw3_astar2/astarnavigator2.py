@@ -348,6 +348,33 @@ def shortcutPath(source, dest, path, world, agent):
 	path = copy.deepcopy(path)
 	### YOUR CODE GOES BELOW HERE ###
 	
+	if not path:
+		return path
+
+	newPath = []
+ 
+	#see if can go from the source straight to the destination 
+	if clearShot(source, dest, world.getLinesWithoutBorders(), world.getPoints(), agent):
+		return []		#empty path means to go directly 
+
+	current = source
+	i = 0
+	while i < len(path):
+		furtherest = i
+		for j in range(i, len(path)):
+			if clearShot(current, path[j], world.getLinesWithoutBorders(), world.getPoints(), agent):
+				furthest = j
+		if furthest > i:
+			newPath.append(path[furthest])
+			current = path[furtherest]
+			i = furthest + 1
+		else:	
+			if i < len(path):
+				newPath.append(path[i])
+				current = path[i]
+				i += 1
+    if 
+    
 	### YOUR CODE GOES BELOW HERE ###
 	return path
 
